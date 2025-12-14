@@ -1,0 +1,143 @@
+.Sign-page {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/LoginImage.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.Sigin-form {
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.Sigin-form h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    font-style: normal;
+}
+
+.Sigin-form input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.Sigin-form input:focus {
+    outline: none;
+    border-color: #e9ad3e;
+    box-shadow: 0 0 5px rgba(233, 173, 62, 0.3);
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid #c3e6cb;
+}
+
+.Sigin-form h3 {
+    color: white;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 15px;
+}
+
+.Sigin-form a {
+    color: #e9ad3e;
+    text-decoration: none;
+}
+
+.Sigin-form a:hover {
+    text-decoration: underline;
+}
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(38,118,127,0.9);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 8px rgba(38,118,127,0.12);
+}
+
+.back-button:hover {
+    background-color: rgba(31,97,101,0.95);
+    box-shadow: 0 8px 18px rgba(38,118,127,0.18);
+}
+
+
+@media (max-width: 600px) {
+    .Sign-page{
+        background-attachment: scroll;
+        align-items: flex-start;
+        padding-top: 4rem;
+    }
+
+    .Sigin-form{
+        padding: 24px;
+        margin: 0 1rem;
+        max-width: 360px;
+        width: calc(100% - 2rem);
+    }
+
+    .Sigin-form h2{
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .back-button{
+        top: 12px;
+        left: 12px;
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 400px) {
+    .Sigin-form{
+        padding: 18px;
+    }
+
+    .Sigin-form input{
+        padding: 10px;
+        font-size: 14px;
+    }
+}
