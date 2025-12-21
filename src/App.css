@@ -1,14 +1,15 @@
 body{
-    font-style: italic;
     margin: 0;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
     box-sizing: border-box;
+    background: linear-gradient(140deg, #0d121c 0%, #0d1524 50%, #0a0f1b 100%);
+    color: #eef3ff;
 }
 .App{
     text-align: center;
-    color: white;
-    margin-top: 2rem;
+    color: inherit;
+    min-height: 100vh;
     padding: 0 1rem;
 }
 
