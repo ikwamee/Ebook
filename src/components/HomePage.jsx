@@ -1,80 +1,149 @@
 import './HomePage.css';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context/UserContext';
 
-const featuredBooks = [
-  {
-    id: 1,
-    title: 'Designing the Future Library',
-    author: 'Noah Brennan',
-    category: 'Design',
-    blurb: 'A premium look at next-gen digital library experiences with timeless typography and bold color.',
-    cover: '🌓',
-    tag: 'Editors’ Pick',
-    tone: 'purple'
-  },
-  {
-    id: 2,
-    title: 'The Product Thinking Playbook',
-    author: 'Elena Strauss',
-    category: 'Business',
-    blurb: 'Strategy, storytelling, and systems thinking for modern product teams and founders.',
-    cover: '📈',
-    tag: 'Top Rated',
-    tone: 'blue'
-  },
-  {
-    id: 3,
-    title: 'Calm Interfaces',
-    author: 'Hiro Tanaka',
-    category: 'Technology',
-    blurb: 'Minimalist UI patterns that reduce noise and boost focus for premium digital products.',
-    cover: '🌌',
-    tag: 'New',
-    tone: 'teal'
-  }
-];
+const featuredTopics = ['Design', 'Fiction', 'Science', 'History', 'Philosophy'];
+const categories = ['All', 'Fiction', 'Science', 'History', 'Philosophy'];
 
-const libraryBooks = [
-  { id: 11, title: 'Midnight Architectures', author: 'Ava Rhodes', category: 'Design', downloads: '28.4k', rating: 4.9, cover: '🌙' },
-  { id: 12, title: 'Systems for Builders', author: 'Jon Park', category: 'Technology', downloads: '22.1k', rating: 4.8, cover: '⚙️' },
-  { id: 13, title: 'Velocity', author: 'Nina Patel', category: 'Business', downloads: '19.7k', rating: 4.7, cover: '🚀' },
-  { id: 14, title: 'Soft Focus', author: 'Kemi Adebayo', category: 'Lifestyle', downloads: '17.3k', rating: 4.6, cover: '🎧' },
-  { id: 15, title: 'Interface Poetry', author: 'Leo Martins', category: 'Design', downloads: '15.9k', rating: 4.8, cover: '🪄' },
-  { id: 16, title: 'Signal to Noise', author: 'Priya Raman', category: 'Technology', downloads: '14.1k', rating: 4.7, cover: '📡' },
-  { id: 17, title: 'Golden Hour', author: 'Arthur Miles', category: 'Lifestyle', downloads: '13.6k', rating: 4.5, cover: '🌅' },
-  { id: 18, title: 'Crafted Narratives', author: 'Maya Ortiz', category: 'Business', downloads: '12.8k', rating: 4.6, cover: '📖' }
-];
+const BookDetailModal = ({ book, onClose }) => {
+  if (!book) return null;
+  
+  const getDownloadUrl = () => {
+    if (book.formats) {
+      return book.formats['application/epub+zip'] ||
+             book.formats['text/plain'] ||
+             book.formats['text/html'] ||
+             Object.values(book.formats)[0];
+    }
+    return null;
+  };
 
-const categories = ['All', 'Design', 'Technology', 'Business', 'Lifestyle'];
+  const downloadUrl = getDownloadUrl();
+  const htmlUrl = book.formats?.['text/html'];
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="modal-body">
+          <div className="modal-left">
+            <div className="modal-cover">
+              {book.coverImage ? (
+                <img src={book.coverImage} alt={book.title} />
+              ) : (
+                <div className="cover-placeholder">📖</div>
+              )}
+            </div>
+          </div>
+          <div className="modal-right">
+            <h2>{book.title}</h2>
+            <p className="modal-author">by {book.author || 'Unknown'}</p>
+            {book.language && (
+              <p className="modal-meta">Language: {book.language.toUpperCase()}</p>
+            )}
+            <div className="modal-actions">
+              {htmlUrl && (
+                <a href={htmlUrl} target="_blank" rel="noopener noreferrer" className="btn cta">
+                  📖 Read Online
+                </a>
+              )}
+              {downloadUrl && (
+                <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="btn cta">
+                  ⬇ Download
+                </a>
+              )}
+              {!htmlUrl && !downloadUrl && (
+                <p className="no-download">This book's download format is not currently available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function HomePage({ setCurrentPage }) {
   const { logoutUser } = useContext(UserContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [slide, setSlide] = useState(0);
+  const [featuredBooks, setFeaturedBooks] = useState([]);
+  const [libraryBooks, setLibraryBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBook, setSelectedBook] = useState(null);
+
+  // Fetch featured books
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const response = await fetch('https://gutendex.com/books?sort=popular');
+        const data = await response.json();
+        const books = data.results.slice(0, 3).map((book) => ({
+          id: book.id,
+          title: book.title,
+          author: book.authors?.[0]?.name || 'Unknown',
+          category: 'Featured',
+          blurb: `${book.title} is a timeless classic. Dive into this literary masterpiece.`,
+          cover: book.formats?.['image/jpeg'] ? '📚' : '📖',
+          tag: 'Popular',
+          tone: ['purple', 'blue', 'teal'][Math.floor(Math.random() * 3)],
+          formats: book.formats,
+          coverImage: book.formats?.['image/jpeg']
+        }));
+        setFeaturedBooks(books);
+      } catch (error) {
+        console.error('Error fetching featured books:', error);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  // Fetch library books based on category or search
+  useEffect(() => {
+    const fetchLibraryBooks = async () => {
+      setLoading(true);
+      try {
+        const query = searchTerm.trim() || (activeCategory !== 'All' ? activeCategory : 'fiction');
+        const response = await fetch(`https://gutendex.com/books?search=${encodeURIComponent(query)}&sort=popular`);
+        const data = await response.json();
+        const books = (data.results || []).slice(0, 12).map((book) => ({
+          id: book.id,
+          title: book.title,
+          author: book.authors?.[0]?.name || 'Unknown',
+          category: activeCategory,
+          downloads: `${Math.floor(Math.random() * 50)}k`,
+          rating: (3.5 + Math.random() * 1.5).toFixed(1),
+          cover: '📖',
+          formats: book.formats,
+          language: book.languages?.[0] || 'en',
+          coverImage: book.formats?.['image/jpeg']
+        }));
+        setLibraryBooks(books);
+      } catch (error) {
+        console.error('Error fetching library books:', error);
+        setLibraryBooks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchLibraryBooks();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, activeCategory]);
 
   useEffect(() => {
+    if (featuredBooks.length === 0) return;
     const timer = setInterval(() => {
       setSlide((prev) => (prev + 1) % featuredBooks.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [featuredBooks.length]);
 
-  const filteredBooks = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return libraryBooks.filter((book) => {
-      const matchCategory = activeCategory === 'All' || book.category === activeCategory;
-      const matchTerm = term
-        ? book.title.toLowerCase().includes(term) ||
-          book.author.toLowerCase().includes(term) ||
-          book.category.toLowerCase().includes(term)
-        : true;
-      return matchCategory && matchTerm;
-    });
-  }, [activeCategory, searchTerm]);
-
-  const activeBook = featuredBooks[slide];
+  const activeBook = featuredBooks[slide] || featuredBooks[0];
 
   return (
     <div className="home-page">
@@ -132,23 +201,25 @@ function HomePage({ setCurrentPage }) {
           </div>
 
           <div className="hero-right">
-            <div className={`feature-card ${activeBook.tone}`}>
-              <div className="feature-top">
-                <span className="feature-tag">{activeBook.tag}</span>
-                <span className="feature-cover">{activeBook.cover}</span>
+            {activeBook && (
+              <div className={`feature-card ${activeBook.tone}`}>
+                <div className="feature-top">
+                  <span className="feature-tag">{activeBook.tag}</span>
+                  <span className="feature-cover">{activeBook.cover}</span>
+                </div>
+                <div className="feature-body">
+                  <p className="feature-category">{activeBook.category}</p>
+                  <h3>{activeBook.title}</h3>
+                  <p className="feature-author">by {activeBook.author}</p>
+                  <p className="feature-blurb">{activeBook.blurb}</p>
+                </div>
+                <div className="feature-controls">
+                  <button onClick={() => setSlide((prev) => (prev - 1 + featuredBooks.length) % featuredBooks.length)}>Prev</button>
+                  <span className="feature-index">{slide + 1}/{featuredBooks.length}</span>
+                  <button onClick={() => setSlide((prev) => (prev + 1) % featuredBooks.length)}>Next</button>
+                </div>
               </div>
-              <div className="feature-body">
-                <p className="feature-category">{activeBook.category}</p>
-                <h3>{activeBook.title}</h3>
-                <p className="feature-author">by {activeBook.author}</p>
-                <p className="feature-blurb">{activeBook.blurb}</p>
-              </div>
-              <div className="feature-controls">
-                <button onClick={() => setSlide((prev) => (prev - 1 + featuredBooks.length) % featuredBooks.length)}>Prev</button>
-                <span className="feature-index">{slide + 1}/{featuredBooks.length}</span>
-                <button onClick={() => setSlide((prev) => (prev + 1) % featuredBooks.length)}>Next</button>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
@@ -172,24 +243,38 @@ function HomePage({ setCurrentPage }) {
           </div>
 
           <div className="books-grid">
-            {filteredBooks.map((book) => (
-              <div key={book.id} className="book-card">
-                <div className="book-top">
-                  <span className="book-cover">{book.cover}</span>
-                  <span className="book-category">{book.category}</span>
+            {loading ? (
+              <div className="loading">Loading books...</div>
+            ) : libraryBooks.length > 0 ? (
+              libraryBooks.map((book) => (
+                <div key={book.id} className="book-card" onClick={() => setSelectedBook(book)}>
+                  <div className="book-top">
+                    <span className="book-cover">
+                      {book.coverImage ? (
+                        <img src={book.coverImage} alt={book.title} />
+                      ) : (
+                        '📖'
+                      )}
+                    </span>
+                    <span className="book-category">{book.category}</span>
+                  </div>
+                  <h3 className="book-title">{book.title}</h3>
+                  <p className="book-author">{book.author}</p>
+                  <div className="book-meta">
+                    <span>⬇ {book.downloads}</span>
+                    <span>⭐ {book.rating}</span>
+                  </div>
+                  <button className="btn card-cta">Read now</button>
                 </div>
-                <h3 className="book-title">{book.title}</h3>
-                <p className="book-author">{book.author}</p>
-                <div className="book-meta">
-                  <span>⬇ {book.downloads}</span>
-                  <span>⭐ {book.rating}</span>
-                </div>
-                <button className="btn card-cta">Read now</button>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="no-results">No books found. Try another search.</div>
+            )}
           </div>
         </section>
       </main>
+
+      <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
     </div>
   );
 }
